@@ -19,7 +19,7 @@ export const createSensor =  async (
             "devices":[
                 {
                     "device_id": `${device_id}`,
-                    "entity_name": `${entity_name}`,
+                    "entity_name": `urn:ngsi-ld:${entity_name}`,
                     "entity_type": `${entity_type}`,
                     "transport": "HTTP",
                     "attributes": [
@@ -34,7 +34,7 @@ export const createSensor =  async (
                     {
                         "name": `${foreignkeyNameRef}`,
                         "type": "Relationship",
-                        "value": `${foreignkeyValueRef}`
+                        "value": `urn:ngsi-ld:${foreignkeyValueRef}`
                     }
                     ]
                 },
