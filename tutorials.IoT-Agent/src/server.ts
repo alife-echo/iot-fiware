@@ -2,7 +2,7 @@ import express,{Request,Response, response} from 'express'
 import path from 'path'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import {createDatabase,getInformationDatabase,createDocumentAir} from './db/Cloudant'
+import {createDatabase,getInformationDatabase,createDocumentRoom} from './db/Cloudant'
 import IotRouters from './routers/IotRouters'
 dotenv.config()
 
@@ -19,9 +19,9 @@ server.use(express.static(path.join(__dirname,'../public')))
 server.use(cors(cor_options))
 server.use(IotRouters)
 createDatabase('sensors');
-createDatabase('devices')
+createDatabase('rooms')
 getInformationDatabase('sensors')
-getInformationDatabase('devices')
+getInformationDatabase('rooms')
 server.use((req:Request,res:Response) => {
     res.json({error:'endpoint não encontrado'}).status(400)
 })

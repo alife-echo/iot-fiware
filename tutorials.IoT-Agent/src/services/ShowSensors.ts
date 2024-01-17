@@ -3,7 +3,7 @@ myHeaders.append("fiware-service", "openiot");
 myHeaders.append("fiware-servicepath", "/");
 myHeaders.append("Cookie", "connect.sid=s%3AmdgXLUl4tCxdyU2QqB8QJGALuxjcTSPO.R9t9QCl%2FYz1glJCiPh07gncRPHHCpgLPVLQYLZFXLo4");
 
-export const devices =  async (entity_name:string) => {
+export const getAllSensors =  async (entity_name:string) => {
     
     let requestOptions = {
         method: 'GET',

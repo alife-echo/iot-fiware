@@ -1,5 +1,5 @@
 
-export const getAllDevicesAir = async (entity_name:string) => {
+export const getAllRooms = async (entity_name:string) => {
     let requestOptions = {
         method: 'GET',
         redirect: 'follow' as RequestRedirect

@@ -1,18 +1,30 @@
 let myHeaders = new Headers();
 myHeaders.append("Content-Type", "application/json");
 
-export const createAir = async (id:string,name:string,mark:string) => {
+export const createRoom = async (id:string,name:string,description:string,block:string,level:string,campus:string) => {
     let raw = JSON.stringify({
         "id" : `urn:ngsi-ld:${id}`,
-        "type":"Device",
+        "type":"LivingRoom",
         "name":{
             "type":"Text",
             "value":`${name}`
         },
-        "mark":{
+        "description":{
            "type":"Text",
-           "value":`${mark}`
-        }
+           "value":`${description}`
+        },
+        "block":{
+          "type":"Text",
+          "value":`${block}`
+       },
+        "level":{
+          "type":"Text",
+          "value":`${level}`
+       },
+       "campus":{
+        "type":"Text",
+        "value":`${campus}`
+     },
     })
 
     let requestOptions = {
@@ -25,10 +37,10 @@ export const createAir = async (id:string,name:string,mark:string) => {
     try {
         const response = await fetch("http://localhost:1026/v2/entities", requestOptions)
         const result = await response.text();
-        return { success: true, message: result };
+        return { message: result };
       }
     catch(error){
-        return { success: false, message: error };
+        return { message: error };
       }
 
 }

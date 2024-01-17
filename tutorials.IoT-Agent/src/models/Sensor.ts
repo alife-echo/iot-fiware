@@ -50,8 +50,8 @@ export const createSensor =  async (
         try {
             const response = await fetch("http://localhost:4041/iot/devices", requestOptions);
             const result = await response.text();
-            return { success: true, message: result };
+            return { message: result };
         } catch (error) {
-            return { success: false, message: error };
+            return {  message: error };
         }
     }
