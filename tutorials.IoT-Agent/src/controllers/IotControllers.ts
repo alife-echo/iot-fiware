@@ -8,6 +8,7 @@ import { createSensor } from "../models/Sensor";
 import { getAllRooms } from "../services/ShowRooms";
 import { createDocumentRoom } from "../db/Cloudant";
 import { createDocumentSensor } from "../db/Cloudant";
+import { format } from "../helpers/formatDataSensors";
 
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
   let { id, name, description, block, level, campus } = req.body;
@@ -71,10 +72,12 @@ export const CREATE_SENSORS = async (req: Request, res: Response) => {
     entity_type,
     object_id,
     nameAtribute,
-    typeAtribute,
+    typeAtribute, 
     foreignkeyNameRef,
     foreignkeyValueRef,
   } = req.body;
+
+ 
   const sensor = await createSensor(
     device_id,
     entity_name,
@@ -92,63 +95,35 @@ export const CREATE_SENSORS = async (req: Request, res: Response) => {
       return error;
     });
 
-  res.status(200).json({ sensor });
+
+  res.status(200).json({ ok:sensor});
 };
 
 export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
-  let { roomRef,dataSensors } = req.body;
-  if(roomRef && dataSensors){
-    res.status(200).json({ok:'---Dados Recebidos ---',data:dataSensors})
+  let { room,data} = req.body;
+  let sensorDataObject: { [key: string]: number } = {}
+  if(room && data){
+    const formattedData = format(data, room);
+    if (formattedData instanceof Error) {
+        return res.status(400).json({ error: formattedData.message });
+    }
+
+    await Promise.all(
+        formattedData.map(async (current) => {
+            await sendDataAgent(current[0], current[1]);
+            const sensorName = current[1].split('|')[0];
+            const sensorValue = parseFloat(current[1].split('|')[1]);
+            sensorDataObject[sensorName] = sensorValue;
+        })
+    );
+    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any)
+    console.log(sensorDataObject)
+    res.status(200).json({ok:'---Dados Recebidos ---',data,ibm:ibm})
   }
   else{
     res.status(400).json({error:'Informe os dados corretamente'})
   }
-  /*if (roomRef) {
-    const datasSensors = randomData();
-    const nitrogen = await sendDataAgent(
-      "nitrogen_sensor_001",
-      `nitrogenLevel|${datasSensors[1]}`
-    )
-      .then((result) => result)
-      .catch((error) => error);
-    const pm25_sensor = await sendDataAgent(
-      "pm25_sensor_001",
-      `pm25Level|${datasSensors[2]}`
-    )
-      .then((result) => result)
-      .catch((error) => error);
-    const pm10_sensor = await sendDataAgent(
-      "pm10_sensor_001",
-      `pm10Level|${datasSensors[3]}`
-    )
-      .then((result) => result)
-      .catch((error) => error);
-    const co2 = await sendDataAgent(
-      "co2_sensor_001",
-      `co2Level|${datasSensors[0]}`
-    )
-      .then((result) => result)
-      .catch((error) => error);
-    const sensorIBM = await createDocumentSensor(
-      roomRef,
-      "sensors",
-      datasSensors[1],
-      datasSensors[0],
-      datasSensors[2],
-      datasSensors[3]
-    );
-    res
-      .json({
-        NO2: nitrogen,
-        PM25_SENSOR_001: pm25_sensor,
-        PM10_SENSOR_001: pm10_sensor,
-        CO2: co2,
-        sensorIBM,
-      })
-      .status(200);
-  } else {
-    res.json({ error: "Informe os dados corretamente" });
-  }*/
+
 };
 
 export const SHOW_SENSORS = async (req: Request, res: Response) => {

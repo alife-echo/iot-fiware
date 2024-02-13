@@ -8,7 +8,7 @@ dotenv.config()
 
 const server = express()
 const cor_options = {
-    origin: 'http://localhost:3000', 
+    origin: '*', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
     credentials: true,
     optionsSuccessStatus: 200
@@ -20,9 +20,10 @@ server.use(cors(cor_options))
 server.use(IotRouters)
 createDatabase('sensors');
 createDatabase('rooms')
-getInformationDatabase('sensors')
-getInformationDatabase('rooms')
+
 server.use((req:Request,res:Response) => {
     res.json({error:'endpoint não encontrado'}).status(400)
 })
 server.listen(process.env.PORT)
+
+

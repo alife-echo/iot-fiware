@@ -6,19 +6,30 @@ import { createConnection } from "net";
 import dotenv from "dotenv";
 import { response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import { transformObject } from "../helpers/transformObject";
 
 dotenv.config();
 
-interface OrderDocument extends CloudantV1.Document {
+export interface OrderDocument extends CloudantV1.Document {
   name?: string;
   joined?: string;
   _id: string;
   _rev?: string;
   mark?: string;
-  no2?: number;
-  pm25?: number;
-  pm10?: number;
-  co2?: number;
+  object?:{
+    CO_MQ7_Level?: number;
+    LGP_MQ9_Level?: number;
+    CH4_MQ9_Level?: number;
+    CO_MQ9_Level?: number;
+    CO_MQ135_Level?:number;
+    ALCOOL_MQ135_Level?:number;
+    CO2_MQ135_Level?:number;
+    Toluen_MQ135_Level?:number;
+    MH4_MQ135_Level?:number;
+    Aceton_MQ135_Level?:number;
+    Temperatura_Level?:number;
+    Humidade_Level?:number;
+  };
   roomRef?: string;
   description?: string;
   block?: string;
@@ -120,20 +131,15 @@ export async function createDocumentRoom(
 export async function createDocumentSensor(
   roomRef: string,
   db: string,
-  no2: number,
-  co2: number,
-  pm25: number,
-  pm10: number
+  object:OrderDocument
 ) {
   const document: OrderDocument = {
     _id: uuidv4(),
     roomRef,
     joined: `${getDateNow()},${getHoursAndMinutesNow()}`,
-    no2,
-    co2,
-    pm10,
-    pm25,
+    dataSensors:transformObject(object) as OrderDocument['object']
   };
+
     service
       .postDocument({
         db,
