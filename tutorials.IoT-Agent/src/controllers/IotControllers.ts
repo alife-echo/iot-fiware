@@ -9,7 +9,8 @@ import { getAllRooms } from "../services/ShowRooms";
 import { createDocumentRoom } from "../db/Cloudant";
 import { createDocumentSensor } from "../db/Cloudant";
 import { format } from "../helpers/formatDataSensors";
-
+import { calcIQAR } from "../helpers/calcIQAR";
+import { replaceLastOcurrence } from "../helpers/replaceLastOcurrance";
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
   let { id, name, description, block, level, campus } = req.body;
   if (id && name && description && block && level && campus) {
@@ -102,6 +103,7 @@ export const CREATE_SENSORS = async (req: Request, res: Response) => {
 export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
   let { room,data} = req.body;
   let sensorDataObject: { [key: string]: number } = {}
+  let qualityAirConcept:any = ''
   if(room && data){
     const formattedData = format(data, room);
     if (formattedData instanceof Error) {
@@ -109,14 +111,17 @@ export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
     }
 
     await Promise.all(
-        formattedData.map(async (current) => {
-            await sendDataAgent(current[0], current[1]);
+        formattedData.map(async (current:any) => {
             const sensorName = current[1].split('|')[0];
             const sensorValue = parseFloat(current[1].split('|')[1]);
             sensorDataObject[sensorName] = sensorValue;
+            await sendDataAgent(current[0], current[1]);
+            console.log(sensorName + ',' + sensorValue)  
+            qualityAirConcept += calcIQAR(sensorName,sensorValue)
+            //console.log(`device_id:${current[0]},entityName:${replaceLastOcurrence(current[0],'_',':')},object_id:${sensorName}`)
         })
     );
-    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any)
+    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,qualityAirConcept.replaceAll('undefined',''))
     console.log(sensorDataObject)
     res.status(200).json({ok:'---Dados Recebidos ---',data,ibm:ibm})
   }
