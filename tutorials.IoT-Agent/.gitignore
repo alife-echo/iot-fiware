@@ -29,10 +29,9 @@ pids
 *.pid
 *.seed
 *.pid.lock
-node_modules/
+
 jspm_packages/
 .npm
 .eslintcache
 *.tgz
 .next
-.env
