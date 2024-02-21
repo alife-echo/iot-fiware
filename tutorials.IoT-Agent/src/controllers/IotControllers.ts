@@ -9,7 +9,7 @@ import { getAllRooms } from "../services/ShowRooms";
 import { createDocumentRoom } from "../db/Cloudant";
 import { createDocumentSensor } from "../db/Cloudant";
 import { format } from "../helpers/formatDataSensors";
-import { calcIQAR } from "../helpers/calcIQAR";
+import {calcIQAR} from "../helpers/calcIQAR";
 import { replaceLastOcurrence } from "../helpers/replaceLastOcurrance";
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
   let { id, name, description, block, level, campus } = req.body;
@@ -103,7 +103,8 @@ export const CREATE_SENSORS = async (req: Request, res: Response) => {
 export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
   let { room,data} = req.body;
   let sensorDataObject: { [key: string]: number } = {}
-  let qualityAirConcept:any = ''
+  let arr : any= []
+  
   if(room && data){
     const formattedData = format(data, room);
     if (formattedData instanceof Error) {
@@ -117,11 +118,14 @@ export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
             sensorDataObject[sensorName] = sensorValue;
             await sendDataAgent(current[0], current[1]);
             console.log(sensorName + ',' + sensorValue)  
-            qualityAirConcept += calcIQAR(sensorName,sensorValue)
-            //console.log(`device_id:${current[0]},entityName:${replaceLastOcurrence(current[0],'_',':')},object_id:${sensorName}`)
+            arr.push({sensorName,sensorValue})
         })
     );
-    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,qualityAirConcept.replaceAll('undefined',''))
+    console.log('Qualidade do Ar:',calcIQAR(arr)[0])
+    console.log('Dados IQAR:',calcIQAR(arr)[1])
+    console.log(arr.length)
+    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,calcIQAR(arr)[0],calcIQAR(arr)[1] as any)
+    if(arr.length >= 13){arr = []}
     console.log(sensorDataObject)
     res.status(200).json({ok:'---Dados Recebidos ---',data,ibm:ibm})
   }

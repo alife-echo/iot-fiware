@@ -30,6 +30,11 @@ export interface OrderDocument extends CloudantV1.Document {
     Temperatura_Level?:number;
     Humidade_Level?:number;
   };
+  objectIQAR?:{
+    CO_MQ9_IQAR:number,
+    CO_MQ135_IQAR:number,
+    O3_MQ131_IQAR:number,
+  }
   qualityAirConcept?:string
   roomRef?: string;
   description?: string;
@@ -133,14 +138,16 @@ export async function createDocumentSensor(
   roomRef: string,
   db: string,
   object:OrderDocument,
-  qualityAirConcept:string|undefined
+  qualityAirConcept:string|undefined,
+  sensorsIQAR:OrderDocument
 ) {
   const document: OrderDocument = {
     _id: uuidv4(),
     roomRef,
     joined: `${getDateNow()},${getHoursAndMinutesNow()}`,
     dataSensors:transformObject(object) as OrderDocument['object'],
-    qualityAirConcept:qualityAirConcept
+    qualityAirConcept:qualityAirConcept,
+    sensorIQAR:transformObject(sensorsIQAR) as OrderDocument['objectIQAR']
   };
 
     service

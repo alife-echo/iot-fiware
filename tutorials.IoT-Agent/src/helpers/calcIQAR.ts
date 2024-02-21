@@ -1,72 +1,76 @@
-let storage:number[] = []  
-function qualityAirConcept (values:number[]) {
-    const max = values.reduce((a, b) => Math.max(a, b), -Infinity);
-    for(let i = 0; i<=400;i++){
-        if(i === Math.round(max)){
-            if(i >= 0 && i<=40){
-                return 'Boa'
-            }
-            else if(i>= 41 && i<=80){
-                return 'Moderada'
-            }
-            else if(i>= 81 && i<= 120){
-                return 'Ruim'
-            }
-            else if(i>= 121 && i<= 200){
-                return 'Muito Ruim'
-            }
-            else if(i>=201 && i<= 400){
-                return 'Péssima'
-            }
-        }
-    }
-
-}
-function index(nameSensor:string,valueC:number) {
-        if(nameSensor === 'CO_MQ9_Level'  || nameSensor === 'CO_MQ135_Level'){
-            for(let i = 0; i<= 50; i++) {
-                if(i === valueC){
-                    if(i >= 0 && i<=9){
-                       return [[0,40],[0,9]] 
-                    }
-                    else if (i > 9 && i<=11){
-                        return [[41,80],[9,11]]
-                    }
-                    else if(i>11 && i<=13){
-                        return [[81,120],[11,13]]
-                    }
-                    else if(i > 13 && i<=15){
-                        return [[121,200],[13,15]]
-                    }
-                    else if(i>15 && i<=50){
-                        return [[201,400],[15,50]]
-                    }
-                }    
-            }
-        }
+interface IndexRange {
+    indexInitial: number;
+    indexFinal: number;
+    concentrationInitial: number;
+    concentrationFinal: number;
 }
 
-export function  calcIQAR (nameSensor:string,valueSensor:number){  
-     
-    if(nameSensor === 'CO_MQ9_Level'  || nameSensor === 'CO_MQ135_Level') {
-        let roundValueCO =  Math.round(valueSensor)
-        console.log(roundValueCO)
-        let indexAndConcentration  =  index(nameSensor,roundValueCO)
-        if(indexAndConcentration){
-            let calcForm = indexAndConcentration[0][0] + ((indexAndConcentration[0][1]  - indexAndConcentration[0][0])/(indexAndConcentration[1][1] - indexAndConcentration[1][0])) * (roundValueCO - indexAndConcentration[1][0] )
-            storage.push(calcForm)
-            console.log(indexAndConcentration)
-            console.log(calcForm)
-            console.log(storage)
-            let qualityAir = qualityAirConcept(storage)
-            if(storage.length > 1){
-                storage = []
-                console.log(qualityAir)
-                return qualityAir
-            }
-            
-        }
-    
+interface SensorData {
+    sensorName: string;
+    sensorValue: number;
+}
+
+const qualityLabels = ['Boa', 'Moderada', 'Ruim', 'Muito Ruim', 'Péssima'];
+
+function getQualityLabel(index: number): string {
+    if (index <= 40) return qualityLabels[0];
+    if (index <= 80) return qualityLabels[1];
+    if (index <= 120) return qualityLabels[2];
+    if (index <= 200) return qualityLabels[3];
+    return qualityLabels[4];
+}
+
+function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
+    const range = ranges.find(range => sensorValue >= range.concentrationInitial && sensorValue <= range.concentrationFinal);
+    if (range) {
+        const { indexInitial, indexFinal, concentrationInitial, concentrationFinal } = range;
+        return indexInitial + ((indexFinal - indexInitial) / (concentrationFinal - concentrationInitial)) * (sensorValue - concentrationInitial);
     }
-    
+    return 0;
+}
+
+function roundValue(sensorValue: number): number {
+    const rounded = Math.round(sensorValue);
+    if (rounded % 2 !== 0 && rounded !== 500) return Math.round(sensorValue);
+    return rounded;
+}
+
+export function calcIQAR(sensorData: SensorData[]): [string, Record<string, number>] {
+    const iqarValues: number[] = [];
+    const sensorDataObject: Record<string, number> = {};
+
+    const indexRanges: Record<string, IndexRange[]> = {
+        CO_MQ9_Level: [{ indexInitial: 0, indexFinal: 40, concentrationInitial: 0, concentrationFinal: 9 },
+                        { indexInitial: 41, indexFinal: 80, concentrationInitial: 10, concentrationFinal: 11 },
+                        { indexInitial: 81, indexFinal: 120, concentrationInitial: 12, concentrationFinal: 13 },
+                        { indexInitial: 121, indexFinal: 200, concentrationInitial: 14, concentrationFinal: 15 },
+                        { indexInitial: 201, indexFinal: 400, concentrationInitial: 16, concentrationFinal: 50 }],
+        CO_MQ135_Level: [{ indexInitial: 0, indexFinal: 40, concentrationInitial: 0, concentrationFinal: 9 },
+                          { indexInitial: 41, indexFinal: 80, concentrationInitial: 10, concentrationFinal: 11 },
+                          { indexInitial: 81, indexFinal: 120, concentrationInitial: 12, concentrationFinal: 13 },
+                          { indexInitial: 121, indexFinal: 200, concentrationInitial: 14, concentrationFinal: 15 },
+                          { indexInitial: 201, indexFinal: 400, concentrationInitial: 16, concentrationFinal: 50 }],
+        O3_MQ131_Level: [{ indexInitial: 0, indexFinal: 40, concentrationInitial: 0, concentrationFinal: 100 },
+                          { indexInitial: 41, indexFinal: 80, concentrationInitial: 101, concentrationFinal: 130 },
+                          { indexInitial: 81, indexFinal: 120, concentrationInitial: 131, concentrationFinal: 160 },
+                          { indexInitial: 121, indexFinal: 200, concentrationInitial: 161, concentrationFinal: 200 },
+                          { indexInitial: 201, indexFinal: 400, concentrationInitial: 201, concentrationFinal: 800 }]
+    };
+
+    for (const sensor of sensorData) {
+        if (sensor.sensorName !== 'CO_MQ9_Level' && sensor.sensorName !== 'CO_MQ135_Level' && sensor.sensorName !== 'O3_MQ131_Level') {
+            continue; 
+        }
+
+        const roundedValue = roundValue(sensor.sensorValue);
+        const ranges = indexRanges[sensor.sensorName];
+        const index = calculateIndex(roundedValue, ranges);
+        iqarValues.push(index);
+        sensorDataObject[`${sensor.sensorName}_IQAR`] = index;
+    }
+
+    const maxIndex = Math.max(...iqarValues);
+    const quality = getQualityLabel(maxIndex);
+
+    return [quality, sensorDataObject];
 }
