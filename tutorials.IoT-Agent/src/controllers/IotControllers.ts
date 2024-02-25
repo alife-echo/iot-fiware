@@ -12,9 +12,9 @@ import { format } from "../helpers/formatDataSensors";
 import {calcIQAR} from "../helpers/calcIQAR";
 import { replaceLastOcurrence } from "../helpers/replaceLastOcurrance";
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
-  let { id, name, description, block, level, campus } = req.body;
+  let { id, name, description, block, level, campus,latitude,longitude } = req.body;
   if (id && name && description && block && level && campus) {
-    const create = await createRoom(id, name, description, block, level, campus)
+    const create = await createRoom(id, name, description, block, level, campus,latitude,longitude)
       .then((response) => {
         return response;
       })
@@ -28,7 +28,9 @@ export const CREATE_ROOMS = async (req: Request, res: Response) => {
       description,
       block,
       level,
-      campus
+      campus,
+      latitude,
+      longitude
     )
       .then((response) => {
         return response;

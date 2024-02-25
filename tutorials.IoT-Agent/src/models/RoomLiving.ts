@@ -1,7 +1,7 @@
 let myHeaders = new Headers();
 myHeaders.append("Content-Type", "application/json");
 
-export const createRoom = async (id:string,name:string,description:string,block:string,level:string,campus:string) => {
+export const createRoom = async (id:string,name:string,description:string,block:string,level:string,campus:string,latitude:number,longitude:number) => {
     let raw = JSON.stringify({
         "id" : `urn:ngsi-ld:${id}`,
         "type":"LivingRoom",
@@ -25,6 +25,16 @@ export const createRoom = async (id:string,name:string,description:string,block:
         "type":"Text",
         "value":`${campus}`
      },
+     
+     "latitude":{
+      "type":"Number",
+      "value":`${latitude}`
+   },
+     "longitude":{
+     "type":"Number",
+     "value":`${longitude}`
+  },
+
     })
 
     let requestOptions = {

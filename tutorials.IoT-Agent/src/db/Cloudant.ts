@@ -34,7 +34,9 @@ export interface OrderDocument extends CloudantV1.Document {
     CO_MQ9_IQAR:number,
     CO_MQ135_IQAR:number,
     O3_MQ131_IQAR:number,
-  }
+  };
+  latitude?:number;
+  longitude?:number;
   qualityAirConcept?:string
   roomRef?: string;
   description?: string;
@@ -106,7 +108,9 @@ export async function createDocumentRoom(
     description: string,
     block: string,
     level: string,
-    campus: string
+    campus: string,
+    latitude:number,
+    longitude:number
   ) {
     const document: OrderDocument = {
       _id: id,
@@ -116,6 +120,8 @@ export async function createDocumentRoom(
       campus,
       description,
       joined: `${getDateNow()},${(getHoursAndMinutesNow())}`,
+      latitude,
+      longitude
     };
   
     try {
