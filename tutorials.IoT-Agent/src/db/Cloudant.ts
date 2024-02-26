@@ -35,6 +35,8 @@ export interface OrderDocument extends CloudantV1.Document {
     CO_MQ135_IQAR:number,
     O3_MQ131_IQAR:number,
   };
+  calcHeatIndex?:any,
+  targetConcept?:any,
   latitude?:number;
   longitude?:number;
   qualityAirConcept?:string
@@ -145,7 +147,9 @@ export async function createDocumentSensor(
   db: string,
   object:OrderDocument,
   qualityAirConcept:string|undefined,
-  sensorsIQAR:OrderDocument
+  sensorsIQAR:OrderDocument,
+  calcHeatIndex:OrderDocument,
+  targetConcept:OrderDocument
 ) {
   const document: OrderDocument = {
     _id: uuidv4(),
@@ -153,7 +157,10 @@ export async function createDocumentSensor(
     joined: `${getDateNow()},${getHoursAndMinutesNow()}`,
     dataSensors:transformObject(object) as OrderDocument['object'],
     qualityAirConcept:qualityAirConcept,
-    sensorIQAR:transformObject(sensorsIQAR) as OrderDocument['objectIQAR']
+    sensorIQAR:transformObject(sensorsIQAR) as OrderDocument['objectIQAR'],
+    calcHeatIndex,
+    targetConcept
+    
   };
 
     service

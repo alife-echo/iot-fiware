@@ -1,7 +1,6 @@
 import express, { Request, Response, response } from "express";
 import { serviceIot } from "../services/CreateServiceIot";
 import { sendDataAgent } from "../services/SendDataDevice";
-import { randomData } from "../helpers/randomDataSensor";
 import { getAllSensors } from "../services/ShowSensors";
 import { createRoom } from "../models/RoomLiving";
 import { createSensor } from "../models/Sensor";
@@ -10,7 +9,7 @@ import { createDocumentRoom } from "../db/Cloudant";
 import { createDocumentSensor } from "../db/Cloudant";
 import { format } from "../helpers/formatDataSensors";
 import {calcIQAR} from "../helpers/calcIQAR";
-import { replaceLastOcurrence } from "../helpers/replaceLastOcurrance";
+import { calculateHeatIndex,targetConcept } from "../helpers/calcHeatIndex";
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
   let { id, name, description, block, level, campus,latitude,longitude } = req.body;
   if (id && name && description && block && level && campus) {
@@ -119,14 +118,26 @@ export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
             const sensorValue = parseFloat(current[1].split('|')[1]);
             sensorDataObject[sensorName] = sensorValue;
             await sendDataAgent(current[0], current[1]);
-            console.log(sensorName + ',' + sensorValue)  
+            console.log(sensorName + ',' + sensorValue)
             arr.push({sensorName,sensorValue})
         })
     );
+    console.log(arr)
+    const temp_rh:any = arr.filter((substance:any) => substance.sensorName === "Temperatura_Level" || substance.sensorName === "Humidade_Level" )
+    temp_rh.sort((a:any, b:any) => {
+      if (a.sensorName === "Temperatura_Level") {return -1;}
+      if (b.sensorName === "Temperatura_Level") {return 1;}
+      return 0;
+  });
+  
+    const temperatura = temp_rh[0].sensorValue;
+    const umidade = temp_rh[1].sensorValue;
+    console.log(calculateHeatIndex(temperatura, umidade));
+    console.log(targetConcept(temperatura, umidade));
     console.log('Qualidade do Ar:',calcIQAR(arr)[0])
     console.log('Dados IQAR:',calcIQAR(arr)[1])
     console.log(arr.length)
-    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,calcIQAR(arr)[0],calcIQAR(arr)[1] as any)
+    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,calcIQAR(arr)[0],calcIQAR(arr)[1] as any,calculateHeatIndex(temperatura, umidade) as any,targetConcept(temperatura, umidade) as any)
     if(arr.length >= 13){arr = []}
     console.log(sensorDataObject)
     res.status(200).json({ok:'---Dados Recebidos ---',data,ibm:ibm})

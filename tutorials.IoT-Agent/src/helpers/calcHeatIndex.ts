@@ -1,11 +1,39 @@
 const qualityLabels = [
-  "Cuidado",
-  "Cuidado extremo",
-  "Perigo",
-  "Perigo extremo",
+  "Cuidado: a fadiga é possível com exposição e atividade prolongadas. A atividade contínua pode resultar em cãibras causadas pelo calor.",
+  "Cuidado extremo:  cãibras e exaustão pelo calor são possíveis. A atividade contínua pode resultar em insolação.",
+  "Perigo:  cãibras e exaustão pelo calor são prováveis; a insolação é provável com atividade contínua.",
+  "Perigo extremo:  a insolação é iminente.",
 ];
+export function calculateHeatIndex(tempCelsius: number, rh: number):number {
+  const tempCelsiusAdjusted = tempCelsius;
+  const rhAdjusted = rh; 
 
-function targetConcept(temp: number, rh: number) {
+  if (tempCelsiusAdjusted < 26.7) {
+    return 0.5 * (tempCelsiusAdjusted + 61.0 + ((tempCelsiusAdjusted - 68.0) * 1.2) + (rhAdjusted * 0.094));
+  } else {
+    const HI = -8.78469475556 +
+      1.61139411 * tempCelsiusAdjusted +
+      2.33854883889 * rhAdjusted -
+      0.14611605 * tempCelsiusAdjusted * rhAdjusted -
+      0.012308094 * (tempCelsiusAdjusted * tempCelsiusAdjusted) -
+      0.0164248277778 * (rhAdjusted * rhAdjusted) +
+      0.002211732 * (tempCelsiusAdjusted * tempCelsiusAdjusted) * rhAdjusted +
+      0.00072546 * tempCelsiusAdjusted * (rhAdjusted * rhAdjusted) -
+      0.000003582 * (tempCelsiusAdjusted * tempCelsiusAdjusted) * (rhAdjusted * rhAdjusted);
+
+    if (rhAdjusted < 13 && tempCelsiusAdjusted >= 26.7 && tempCelsiusAdjusted <= 44.4) {
+      return HI - ((13 - rhAdjusted) / 4) * Math.sqrt((17 - Math.abs(tempCelsiusAdjusted - 35)) / 17);
+    } else if (rhAdjusted > 85 && tempCelsiusAdjusted >= 26.7 && tempCelsiusAdjusted <= 30.6) {
+      return HI + ((rhAdjusted - 85) / 10) * ((30.6 - tempCelsiusAdjusted) / 5);
+    } else {
+      return HI;
+    }
+  }
+}
+
+export function targetConcept(temp: number, rh: number) {
+  console.log('temp:',temp)
+  console.log('rh:',rh)
   if (
     (Math.round(temp) === 27 && rh >= 40 && rh <= 100) ||
     (Math.round(temp) === 28 && rh >= 40 && rh <= 85) ||
@@ -57,4 +85,3 @@ function targetConcept(temp: number, rh: number) {
     return "Não encontrado";
   }
 }
-console.log(targetConcept(43, 40));
