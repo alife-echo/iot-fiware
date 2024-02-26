@@ -2,7 +2,7 @@ import {Router} from 'express'
 import * as IotControllersDevices from '../controllers/IotControllers'
 
 const ROUTER = Router()
-
+ROUTER.get('/ping',IotControllersDevices.ping)
 ROUTER.post('/create-room',IotControllersDevices.CREATE_ROOMS)
 ROUTER.get('/show-rooms/:entity_name',IotControllersDevices.SHOW_ROOMS)
 ROUTER.post('/create-service-iot',IotControllersDevices.CREATE_SERVICE_IOT)

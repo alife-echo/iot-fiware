@@ -10,6 +10,9 @@ import { createDocumentSensor } from "../db/Cloudant";
 import { format } from "../helpers/formatDataSensors";
 import {calcIQAR} from "../helpers/calcIQAR";
 import { calculateHeatIndex,targetConcept } from "../helpers/calcHeatIndex";
+export const ping = async(req:Request,res:Response)=>{
+    res.status(200).json({pong:"ok"})
+}
 export const CREATE_ROOMS = async (req: Request, res: Response) => {
   let { id, name, description, block, level, campus,latitude,longitude } = req.body;
   if (id && name && description && block && level && campus) {
