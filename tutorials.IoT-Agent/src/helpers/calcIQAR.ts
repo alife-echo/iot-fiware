@@ -7,7 +7,7 @@ interface IndexRange {
 
 interface SensorData {
     sensorName: string;
-    sensorValue: number;
+    sensorValue: number | null;
 }
 
 const qualityLabels = ['Boa', 'Moderada', 'Ruim', 'Muito Ruim', 'Péssima'];
@@ -19,7 +19,16 @@ function getQualityLabel(index: number): string {
     if (index <= 200) return qualityLabels[3];
     return qualityLabels[4];
 }
-
+function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
+    const range = ranges.find(range => sensorValue >= range.concentrationInitial && sensorValue <= range.concentrationFinal);
+    if (range) {
+        const { indexInitial, indexFinal, concentrationInitial, concentrationFinal } = range;
+        return indexInitial + ((indexFinal - indexInitial) / (concentrationFinal - concentrationInitial)) * (sensorValue - concentrationInitial);
+    } else {
+        return ranges[ranges.length - 1].indexFinal;
+    }
+}
+/*
 function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
     const range = ranges.find(range => sensorValue >= range.concentrationInitial && sensorValue <= range.concentrationFinal);
     if (range) {
@@ -28,7 +37,7 @@ function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
     }
     return 0;
 }
-
+*/
 function roundValue(sensorValue: number): number {
     const rounded = Math.round(sensorValue);
     if (rounded % 2 !== 0 && rounded !== 500) return Math.round(sensorValue);
@@ -61,6 +70,9 @@ export function calcIQAR(sensorData: SensorData[]): [string, Record<string, numb
         if (sensor.sensorName !== 'CO_MQ9_Level' && sensor.sensorName !== 'CO_MQ135_Level' && sensor.sensorName !== 'O3_MQ131_Level') {
             continue; 
         }
+        if(Number.isNaN(sensor.sensorValue) || sensor.sensorValue === null){
+            continue
+        }
 
         const roundedValue = roundValue(sensor.sensorValue);
         const ranges = indexRanges[sensor.sensorName];
@@ -74,3 +86,9 @@ export function calcIQAR(sensorData: SensorData[]): [string, Record<string, numb
 
     return [quality, sensorDataObject];
 }
+let object_test = [
+    {sensorName:'CO_MQ9_Level',sensorValue:3.07},
+    {sensorName:'CO_MQ135_Level',sensorValue:124.5},
+    {sensorName:'O3_MQ131_Level',sensorValue:4.58}]
+
+console.log(calcIQAR(object_test))
