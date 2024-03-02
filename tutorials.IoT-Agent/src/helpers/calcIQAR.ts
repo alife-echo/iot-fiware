@@ -28,16 +28,7 @@ function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
         return ranges[ranges.length - 1].indexFinal;
     }
 }
-/*
-function calculateIndex(sensorValue: number, ranges: IndexRange[]): number {
-    const range = ranges.find(range => sensorValue >= range.concentrationInitial && sensorValue <= range.concentrationFinal);
-    if (range) {
-        const { indexInitial, indexFinal, concentrationInitial, concentrationFinal } = range;
-        return indexInitial + ((indexFinal - indexInitial) / (concentrationFinal - concentrationInitial)) * (sensorValue - concentrationInitial);
-    }
-    return 0;
-}
-*/
+
 function roundValue(sensorValue: number): number {
     const rounded = Math.round(sensorValue);
     if (rounded % 2 !== 0 && rounded !== 500) return Math.round(sensorValue);
@@ -86,9 +77,3 @@ export function calcIQAR(sensorData: SensorData[]): [string, Record<string, numb
 
     return [quality, sensorDataObject];
 }
-let object_test = [
-    {sensorName:'CO_MQ9_Level',sensorValue:3.07},
-    {sensorName:'CO_MQ135_Level',sensorValue:124.5},
-    {sensorName:'O3_MQ131_Level',sensorValue:4.58}]
-
-console.log(calcIQAR(object_test))
