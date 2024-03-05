@@ -1,3 +1,5 @@
+.env
+node_modules
 *~
 .fuse_hidden*
 .directory
@@ -35,4 +37,3 @@ jspm_packages/
 .eslintcache
 *.tgz
 .next
-.env
