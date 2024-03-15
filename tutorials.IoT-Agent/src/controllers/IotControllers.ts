@@ -10,6 +10,8 @@ import { createDocumentSensor } from "../db/Cloudant";
 import { format } from "../helpers/formatDataSensors";
 import {calcIQAR} from "../helpers/calcIQAR";
 import { calculateHeatIndex,targetConcept } from "../helpers/calcHeatIndex";
+import { getRooms } from "../db/Cloudant";
+import { findLastDocByIdRoom,findAllDocsForCsv } from "../db/Cloudant";
 export const ping = async(req:Request,res:Response)=>{
     res.status(200).json({pong:"ok"})
 }
@@ -58,6 +60,24 @@ export const SHOW_ROOMS = async (req: Request, res: Response) => {
     });
   res.status(200).json({ rooms: ShowRooms });
 };
+export const SHOW_ALL_ROOMS = async (req:Request,res:Response) => {
+  const ShowRooms = await getRooms()
+  .then((response) => {
+    return response;
+  })
+  .catch((error) => {
+    return error;
+  });
+res.status(200).json({ rooms: ShowRooms });
+}
+export const SHOW_LAST_DOC_BY_ID_ROOM = async(req:Request,res:Response)=>{
+    let {idRoom} = req.params
+    if(idRoom){
+      const allDocs = await findLastDocByIdRoom(idRoom).then((response)=> {return response}).catch((error) => {return error})
+      console.log(allDocs)
+      res.json({docs:allDocs}).status(200)
+    } 
+}
 export const CREATE_SERVICE_IOT = async (req: Request, res: Response) => {
   let { entity_type } = req.body;
   const service = await serviceIot(entity_type)

@@ -6,7 +6,7 @@ import fs from "fs";
 import converter from "json-2-csv";
 import json2csv from "json2csv";
 import dotenv from "dotenv";
-import e, { response } from "express";
+import { closestDateTime } from "../helpers/closestDateTime";
 import { v4 as uuidv4 } from "uuid";
 import { transformObject } from "../helpers/transformObject";
 
@@ -47,6 +47,35 @@ export interface OrderDocument extends CloudantV1.Document {
   block?: string;
   level?: string;
   campus?: string;
+}
+
+export interface RoomType {
+  _id: string;
+  _rev: string;
+  roomRef: string;
+  joined: string;
+  LPG_MQ9_Level: number;
+  CH4_MQ9_Level: number;
+  CO_MQ9_Level: number;
+  CO_MQ135_Level: number;
+  Alcool_MQ135_Level: number;
+  CO2_MQ135_Level: number;
+  Toluen_MQ135_Level: number;
+  MH4_MQ135_Level: number;
+  Aceton_MQ135_Level: number;
+  O3_MQ131_Level: number;
+  Temperatura_Level: number;
+  Humidade_Level: number;
+  QualityAirConcept: string;
+  CO_MQ9_Level_IQAR: number;
+  CO_MQ135_Level_IQAR: number;
+  O3_MQ131_Level_IQAR: number;
+  CalcHeatIndex: number;
+  TargetConcept: string;
+}
+
+export interface StorageTargetRoom {
+  docs: RoomType[];
 }
 
 const authenticator = new IamAuthenticator({
@@ -106,6 +135,48 @@ export async function getInformationDatabase(database: string) {
       console.log("Error na função getInformationDatabase", error);
     });
 }
+export async function findLastDocByIdRoom(idRoom:string):Promise<any>{
+  let storage:any = [];
+  await service.postAllDocs({
+    db:'sensors',
+    includeDocs:true,
+  }).then((response)=>{
+          response.result.rows.filter((sensor)=>{
+            if(sensor.doc?.roomRef === idRoom){
+              storage.push({
+                _id: sensor.doc?._id,
+                _rev: sensor.doc?._rev,
+                roomRef:sensor.doc?.roomRef,
+                joined: sensor.doc?.joined,
+                LPG_MQ9_Level: sensor.doc?.dataSensors.LPG_MQ9_Level,
+                CH4_MQ9_Level:sensor.doc?.dataSensors.CH4_MQ9_Level,
+                CO_MQ9_Level:sensor.doc?.dataSensors. CO_MQ9_Level,
+                CO_MQ135_Level: sensor.doc?.dataSensors.CO_MQ135_Level,
+                Alcool_MQ135_Level:sensor.doc?.dataSensors.Alcool_MQ135_Level,
+                CO2_MQ135_Level:sensor.doc?.dataSensors.CO2_MQ135_Level,
+                Toluen_MQ135_Level:sensor.doc?.dataSensors.Toluen_MQ135_Level,
+                MH4_MQ135_Level:sensor.doc?.dataSensors.MH4_MQ135_Level,
+                Aceton_MQ135_Level:sensor.doc?.dataSensors.Aceton_MQ135_Level,
+                O3_MQ131_Level: sensor.doc?.dataSensors.O3_MQ131_Level,
+                Temperatura_Level:sensor.doc?.dataSensors.Temperatura_Level,
+                Humidade_Level:sensor.doc?.dataSensors.Humidade_Level,
+                QualityAirConcept:sensor.doc?.qualityAirConcept,
+                CO_MQ9_Level_IQAR:sensor.doc?.sensorIQAR.CO_MQ9_Level_IQAR,
+                CO_MQ135_Level_IQAR:sensor.doc?.sensorIQAR.CO_MQ135_Level_IQAR,
+                O3_MQ131_Level_IQAR:sensor.doc?.sensorIQAR.O3_MQ131_Level_IQAR,
+                CalcHeatIndex:sensor.doc?.calcHeatIndex,
+                TargetConcept:sensor.doc?.targetConcept
+              });
+            }
+        })
+       
+  }).catch((error)=>{
+     return error
+  })
+
+  const closestDoc = closestDateTime(storage)
+  return  closestDoc
+}
 export async function DocAlreadyExist(db: string, id: string): Promise<any> {
   service
     .postAllDocs({
@@ -127,20 +198,36 @@ export async function DocAlreadyExist(db: string, id: string): Promise<any> {
       }
     });
 }
-export async function findAllDocs(db: string): Promise<any> {
+
+
+export async function getRooms():Promise<any[]>{
+  const rooms:any[] = []
+   await  service.postAllDocs({
+       db:'rooms',
+       includeDocs:true,
+     }).then(response => {
+        response.result.rows.map((element)=> {
+              rooms.push({id:element?.doc?._id,name:element?.doc?.name,lat:element?.doc?.latitude,long:element?.doc?.longitude})
+        })
+     })
+    return rooms
+}
+
+export async function findAllDocsForCsv(db: string): Promise<any> {
   let storage:any = [];
-  service
+    const rooms: any[] = await getRooms().then(response => {return response}).catch(error => {return error})
+  await  service
     .postAllDocs({
       db: db,
       includeDocs: true,
     })
     .then((response) => {
+      console.log(response)
       response.result.rows.map((element) => {
-        console.log(element)
         storage.push({
           _id: element.doc?._id,
           _rev: element.doc?._rev,
-          roomRef: element.doc?.roomRef,
+          roomRef:rooms.find((room)=> {if(room.id === element.doc?.roomRef){return room}}).name,
           joined: element.doc?.joined,
           LPG_MQ9_Level: element.doc?.dataSensors.LPG_MQ9_Level,
           CH4_MQ9_Level:element.doc?.dataSensors.CH4_MQ9_Level,
@@ -162,18 +249,20 @@ export async function findAllDocs(db: string): Promise<any> {
           TargetConcept:element.doc?.targetConcept
         });
       });
+      //service.postAllDocs({db:'rooms',includeDocs:true}).then((response)=> {response.result.rows.map((elementRoom) => {elementRoom.doc?.name} )})
       const csv = json2csv.parse(storage, { fields });
-      fs.writeFile(`${getDateNow().replace(/\//g, '')}-${getHoursAndMinutesNow().replace(/:/g, '')}-${uuidv4()}.csv`,csv,(err)=>{
+      fs.writeFile(`csv/${getDateNow().replace(/\//g, '')}-${getHoursAndMinutesNow().replace(/:/g, '')}-${uuidv4()}.csv`,csv,(err)=>{
         if(err) throw err
         console.log("CSV GERADO")
       })
-      
     })
     .catch((error) => {
       if (error) {
         return error;
       }
     });
+  
+ 
     storage = []
 }
 export async function createDocumentRoom(
