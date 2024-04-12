@@ -135,6 +135,53 @@ export async function getInformationDatabase(database: string) {
       console.log("Error na função getInformationDatabase", error);
     });
 }
+export async function filterIdRooms():Promise<any>{
+  let storage:any = [];
+  await service.postAllDocs({
+    db:'galpaotocorredordois',
+    includeDocs:true,
+  }).then((response)=>{
+          response.result.rows.filter((sensor)=>{
+            if(sensor.doc?.roomRef === 'sensor_011-room:011' || sensor.doc?.roomRef === 'sensor_010-room:010' ){
+              storage.push({
+                _id: sensor.doc?._id,
+                _rev: sensor.doc?._rev,
+                roomRef:sensor.doc?.roomRef,
+                joined: sensor.doc?.joined,
+                LPG_MQ9_Level: sensor.doc?.dataSensors.LPG_MQ9_Level,
+                CH4_MQ9_Level:sensor.doc?.dataSensors.CH4_MQ9_Level,
+                CO_MQ9_Level:sensor.doc?.dataSensors. CO_MQ9_Level,
+                CO_MQ135_Level: sensor.doc?.dataSensors.CO_MQ135_Level,
+                Alcool_MQ135_Level:sensor.doc?.dataSensors.Alcool_MQ135_Level,
+                CO2_MQ135_Level:sensor.doc?.dataSensors.CO2_MQ135_Level,
+                Toluen_MQ135_Level:sensor.doc?.dataSensors.Toluen_MQ135_Level,
+                MH4_MQ135_Level:sensor.doc?.dataSensors.MH4_MQ135_Level,
+                Aceton_MQ135_Level:sensor.doc?.dataSensors.Aceton_MQ135_Level,
+                O3_MQ131_Level: sensor.doc?.dataSensors.O3_MQ131_Level,
+                Temperatura_Level:sensor.doc?.dataSensors.Temperatura_Level,
+                Humidade_Level:sensor.doc?.dataSensors.Humidade_Level,
+                QualityAirConcept:sensor.doc?.qualityAirConcept,
+                CO_MQ9_Level_IQAR:sensor.doc?.sensorIQAR.CO_MQ9_Level_IQAR,
+                CO_MQ135_Level_IQAR:sensor.doc?.sensorIQAR.CO_MQ135_Level_IQAR,
+                O3_MQ131_Level_IQAR:sensor.doc?.sensorIQAR.O3_MQ131_Level_IQAR,
+                CalcHeatIndex:sensor.doc?.calcHeatIndex,
+                TargetConcept:sensor.doc?.targetConcept
+              });
+            }
+        })
+        const csv = json2csv.parse(storage, { fields });
+      fs.writeFile(`csv/csv-camp3/${getDateNow().replace(/\//g, '')}-${getHoursAndMinutesNow().replace(/:/g, '')}-${uuidv4()}.csv`,csv,(err)=>{
+        if(err) throw err
+        console.log("CSV CAMPUS 3 GERADO")
+      })
+       
+  }).catch((error)=>{
+     return error
+  })
+
+  console.log('---------------campus 3-------------',storage)
+}
+
 export async function findLastDocByIdRoom(idRoom:string):Promise<any>{
   let storage:any = [];
   await service.postAllDocs({
@@ -207,7 +254,7 @@ export async function getRooms():Promise<any[]>{
        includeDocs:true,
      }).then(response => {
         response.result.rows.map((element)=> {
-              rooms.push({id:element?.doc?._id,name:element?.doc?.name,lat:element?.doc?.latitude,long:element?.doc?.longitude})
+              rooms.push({id:element?.doc?._id,name:element?.doc?.name,lat:element?.doc?.latitude,long:element?.doc?.longitude,campus:element?.doc?.campus,block:element?.doc?.block})
         })
      })
     return rooms

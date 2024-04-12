@@ -160,7 +160,7 @@ export const SUBMIT_DATA_AGENT = async (req: Request, res: Response) => {
     console.log('Qualidade do Ar:',calcIQAR(arr)[0])
     console.log('Dados IQAR:',calcIQAR(arr)[1])
     console.log(arr.length)
-    const ibm = await createDocumentSensor(room,'sensors',sensorDataObject as any,calcIQAR(arr)[0],calcIQAR(arr)[1] as any,calculateHeatIndex(temperatura, umidade) as any,targetConcept(temperatura, umidade) as any)
+    const ibm = await createDocumentSensor(room,'galpaotocorredordois',sensorDataObject as any,calcIQAR(arr)[0],calcIQAR(arr)[1] as any,calculateHeatIndex(temperatura, umidade) as any,targetConcept(temperatura, umidade) as any)
     if(arr.length >= 13){arr = []}
     console.log(sensorDataObject)
     res.status(200).json({ok:'---Dados Recebidos ---',data,ibm:ibm})
