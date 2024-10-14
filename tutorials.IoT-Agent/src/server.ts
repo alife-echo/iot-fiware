@@ -2,7 +2,7 @@ import express,{Request,Response, response} from 'express'
 import path from 'path'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import {createDatabase,getInformationDatabase,createDocumentRoom, findAllDocsForCsv, filterIdRooms} from './db/Cloudant'
+import {createDatabase,getInformationDatabase,createDocumentRoom, findAllDocsForCsv, filterIdRooms, minAndMax} from './db/Cloudant'
 import IotRouters from './routers/IotRouters'
 dotenv.config()
 
@@ -24,9 +24,12 @@ createDatabase('transportetocorredordois')
 createDatabase('galpaotoengquimica')
 createDatabase('transportetocorredor')
 createDatabase('transportetoceramica')
-filterIdRooms()
+//minAndMax()
+//filterIdRooms()
+findAllDocsForCsv("testgateway")
 //console.log(findAllDocsForCsv("sensors"))
-console.log(findAllDocsForCsv("galpaotocorredordois"))
+//console.log(findAllDocsForCsv("sensors"))
+
 server.use((req:Request,res:Response) => {
     res.json({error:'endpoint não encontrado'}).status(400)
 })
